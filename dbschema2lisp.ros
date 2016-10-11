@@ -7,12 +7,48 @@ exec ros -Q -- $0 "$@"
   (:use :cl))
 (in-package :ros.script.dbschema2lisp.lisp.3685167702)
 
+(defvar *token-create-table* "CREATE TABLE")
+(defvar *token-semicolon* ";")
+
+(defparameter *interrupte-line* nil)
+(defparameter *sql-read-line-string-buffer* "")
+
+(defun query-in-create-table-token-p (s)
+  (if (search *token-create-table* s)
+      t
+      nil))
+
+(defun query-interrupte-line-p ()
+  (if *interrupte-line*
+      t
+      nil))
+
+(defun query-end-line-p (s)
+  (if (search *token-semicolon* s)
+      t
+      nil))
+
+(defun sql-parser (s)
+  (if (query-in-create-table-token-p s)
+      (progn
+        (defparameter *sql-read-line-string-buffer*
+          (concatenate 'string s *sql-read-line-string-buffer*))
+        (defparameter *interrupte-line* t))
+  (if (query-end-line-p s)
+      (progn
+        (defparameter *sql-read-line-string-buffer* "")
+        (defparameter *interrupte-line* nil)))))
+
 (defun read-file (argv)
   (with-open-file (in (car argv) :if-does-not-exist :error)
     (when in
       (loop for line = (read-line in nil)
          while line do
-           (format t "~a~%" line)))))
+           (sql-parser line)
+           (if (or (query-interrupte-line-p)
+                   (query-end-line-p line)
+                   (query-in-create-table-token-p line))
+               (format t "~a~%" line))))))
 
 (defun main (&rest argv)
   (declare (ignorable argv))
