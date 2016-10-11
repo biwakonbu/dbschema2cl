@@ -6,12 +6,16 @@ exec ros -Q -- $0 "$@"
 (defpackage :ros.script.dbschema2lisp.lisp.3685167702
   (:use :cl))
 (in-package :ros.script.dbschema2lisp.lisp.3685167702)
+
+(defun read-file (argv)
+  (with-open-file (in (car argv) :if-does-not-exist :error)
+    (when in
+      (loop for line = (read-line in nil)
+         while line do
+           (format t "~a~%" line)))))
+
 (defun main (&rest argv)
-  (declare (ignorable argv)))
+  (declare (ignorable argv))
+  (read-file argv))
 ;;; vim: set ft=lisp lisp:
 
-(with-open-file (in "sample.sql" :if-does-not-exist :error)
-  (when in
-    (loop for line = (read-line in nil)
-       while line do
-         (format t "~a~%" line))))
