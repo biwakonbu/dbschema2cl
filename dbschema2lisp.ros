@@ -7,8 +7,16 @@ exec ros -Q -- $0 "$@"
   (:use :cl))
 (in-package :ros.script.dbschema2lisp.lisp.3685167702)
 
+#| Token Object string for display terminal
+|#
+(defvar *token-create-object* "<CREATE TOKEN>")
+(defvar *token-table-object* "<TABLE TOKEN>")
+(defvar *token-create-table-object*
+  (concatenate 'string *token-create-object* *token-table-object*))
+
 (defvar *token-create-table* "CREATE TABLE")
 (defvar *token-semicolon* ";")
+
 
 (defparameter *interrupte-line* nil)
 (defparameter *sql-read-line-string-buffer* "")
