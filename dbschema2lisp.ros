@@ -9,16 +9,19 @@ exec ros -Q -- $0 "$@"
 
 #| Token Object string for display terminal
 |#
+(ql:quickload :cl-ppcre)
+
 (defvar *token-create-object* "<CREATE TOKEN>")
 (defvar *token-table-object* "<TABLE TOKEN>")
+(defvar *token-blank-object* "<BLANK TOKEN>")
 (defvar *token-create-table-object*
   (concatenate 'string *token-create-object* *token-table-object*))
 
 (defvar *token-create-table* "CREATE TABLE")
 (defvar *token-semicolon* ";")
+(defvar *token-blank* " ")
 
-
-(defparameter *interrupte-line* nil)
+(defparameter *interrupt-line* nil)
 (defparameter *sql-read-line-string-buffer* "")
 
 (defun query-in-create-table-token-p (s)
@@ -26,10 +29,15 @@ exec ros -Q -- $0 "$@"
       t
       nil))
 
-(defun query-interrupte-line-p ()
-  (if *interrupte-line*
+(defun query-interrupt-line-p ()
+  (if *interrupt-line*
       t
       nil))
+
+(defun blank-string-buffer-p ()
+  (equal "" *sql-read-line-string-buffer*))
+(defun blank-read-line-p (s)
+  (equal "" s))
 
 (defun query-end-line-p (s)
   (if (search *token-semicolon* s)
@@ -40,21 +48,28 @@ exec ros -Q -- $0 "$@"
   (defparameter *sql-read-line-string-buffer* ""))
 
 (defun interrupt-line-on ()
-  (defparameter *interrupte-line* t))
+  (defparameter *interrupt-line* t))
 (defun interrupt-line-off ()
-  (defparameter *interrupte-line* nil))
+  (defparameter *interrupt-line* nil))
 
 (defun concatenate-query (s)
   (defparameter *sql-read-line-string-buffer*
-    (concatenate 'string s *sql-read-line-string-buffer*)))
+    (concatenate 'string *sql-read-line-string-buffer* s)))
+
+(defun query-parser ()
+  (if (not (blank-string-buffer-p))
+      (format t "~a~%" *sql-read-line-string-buffer*)))
 
 (defun sql-parser (s)
-  (if (query-in-create-table-token-p s)
+  (if (or (query-in-create-table-token-p s)
+          (query-interrupt-line-p))
       (progn
+        ;;(format t "~a~%" (string-trim '(#\Return) s))
         (concatenate-query s)
         (interrupt-line-on)))
   (if (query-end-line-p s)
       (progn
+        (query-parser)
         (initialize-string-buffer)
         (interrupt-line-off))))
 
@@ -63,11 +78,12 @@ exec ros -Q -- $0 "$@"
     (when in
       (loop for line = (read-line in nil)
          while line do
-           (sql-parser line)
-           (if (or (query-interrupte-line-p)
-                   (query-end-line-p line)
-                   (query-in-create-table-token-p line))
-               (format t "~a~%" line))))))
+           (sql-parser (string-trim '(#\Return #\Space) line))
+           ;; (if (or (query-interrupt-line-p)
+           ;;         (query-end-line-p line)
+           ;;         (query-in-create-table-token-p line))
+           ;;     (format t ""))
+               ))))
 
 (defun main (&rest argv)
   (declare (ignorable argv))
