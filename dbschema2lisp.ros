@@ -30,19 +30,25 @@ exec ros -Q -- $0 "$@"
 
 (defun initialize-string-buffer ()
   (defparameter *sql-read-line-string-buffer* ""))
-(defun initialize-interrupt-line ()
+
+(defun interrupt-line-on ()
+  (defparameter *interrupte-line* t))
+(defun interrupt-line-off ()
   (defparameter *interrupte-line* nil))
+
+(defun concatenate-query (s)
+  (defparameter *sql-read-line-string-buffer*
+    (concatenate 'string s *sql-read-line-string-buffer*)))
 
 (defun sql-parser (s)
   (if (query-in-create-table-token-p s)
       (progn
-        (defparameter *sql-read-line-string-buffer*
-          (concatenate 'string s *sql-read-line-string-buffer*))
-        (defparameter *interrupte-line* t))
+        (concatenate-query s)
+        (interrupt-line-on)))
   (if (query-end-line-p s)
       (progn
         (initialize-string-buffer)
-        (initialize-interrupt-line)))))
+        (interrupt-line-off))))
 
 (defun read-file (argv)
   (with-open-file (in (car argv) :if-does-not-exist :error)
