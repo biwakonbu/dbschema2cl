@@ -16,6 +16,8 @@ exec ros -Q -- $0 "$@"
 
 (defun main (&rest argv)
   (declare (ignorable argv))
-  (read-file argv))
+  (handler-case (read-file argv)
+    (file-error (c) (format t "~a~%" c))
+    (type-error () (format t "not arguments~%"))))
 ;;; vim: set ft=lisp lisp:
 
