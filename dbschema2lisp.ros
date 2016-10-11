@@ -10,4 +10,8 @@ exec ros -Q -- $0 "$@"
   (declare (ignorable argv)))
 ;;; vim: set ft=lisp lisp:
 
-(format t "run~%")
+(with-open-file (in "sample.sql" :if-does-not-exist :error)
+  (when in
+    (loop for line = (read-line in nil)
+       while line do
+         (format t "~a~%" line))))
