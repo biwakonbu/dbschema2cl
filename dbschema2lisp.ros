@@ -9,7 +9,8 @@ exec ros -Q -- $0 "$@"
 
 #| Token Object string for display terminal
 |#
-(ql:quickload :cl-ppcre)
+(require :asdf)
+(require :cl-ppcre)
 
 (defvar *token-create-object* "<CREATE TOKEN>")
 (defvar *token-table-object* "<TABLE TOKEN>")
@@ -18,6 +19,12 @@ exec ros -Q -- $0 "$@"
   (concatenate 'string *token-create-object* *token-table-object*))
 
 (defvar *token-create-table* "CREATE TABLE")
+(defvar *start-paren* "\\(")
+(defvar *end-paren* "\\)")
+(defvar *word* "\\w+")
+(defvar *query-split-string*
+    (concatenate 'string *word* "|" *start-paren* "|" *end-paren*))
+
 (defvar *token-semicolon* ";")
 (defvar *token-blank* " ")
 
@@ -58,7 +65,8 @@ exec ros -Q -- $0 "$@"
 
 (defun query-parser ()
   (if (not (blank-string-buffer-p))
-      (format t "~a~%" *sql-read-line-string-buffer*)))
+      (format t "~a~%" (cl-ppcre:all-matches-as-strings
+                        *query-split-string* *sql-read-line-string-buffer*))))
 
 (defun sql-parser (s)
   (if (or (query-in-create-table-token-p s)
